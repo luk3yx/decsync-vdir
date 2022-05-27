@@ -7,6 +7,9 @@ with a [vdir](https://vdirsyncer.pimutils.org/en/stable/vdir.html).
 
 Make sure you have Go 1.16 or later installed.
 
+**Please back up your DecSync directory and vdir before trying decsync-vdir in
+case something goes wrong!**
+
 Building decsync-vdir:
 
 ```
@@ -32,4 +35,5 @@ The vdir directory will be created if it doesn't already exist.
  - Deleting a file in the vdir will not delete it on DecSync, `decsync-vdir`
    will recreate the file inside the vdir instead.
  - `decsync-vdir` doesn't store entries created on other devices in its own
-   storage directory under `v2`.
+   storage directory under `v2`. This means that you shouldn't delete other
+   device's directories manually after running decsync-vdir.
