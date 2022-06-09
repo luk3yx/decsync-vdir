@@ -37,6 +37,7 @@ type any = interface{}
 var infoPath = []string{"info"}
 var ErrNoDeviceName = errors.New("No device name specified (read-only mode)")
 var safeFilenameRegex = regexp.MustCompile(`^[A-Za-z0-9\-_]+$`)
+var storageFileRegex = regexp.MustCompile(`^[0-9A-Fa-f]{2}|info$`)
 
 func isUnsafeFilename(fn string) bool {
 	return safeFilenameRegex.Find([]byte(fn)) == nil
@@ -199,18 +200,19 @@ func (d *DecSyncFolder) Iter(pathPrefix []string, includeDeleted bool, callback 
 	// Collect all the filenames that need to be searched
 	hashes := make(map[string][]string)
 	for _, dir := range deviceDirs {
-		data, err := os.ReadFile(d.directory + "/v2/" + dir.Name() + "/sequences")
+		// The remote device's "sequences" file may not list all the files,
+		// as data that is imported from a now-deleted device doesn't make
+		// DecSync increment the sequence numbers.
+		files, err := os.ReadDir(d.directory + "/v2/" + dir.Name())
 		if err != nil {
 			return err
 		}
-		var sequences map[string]uint64
-		if err = json.Unmarshal(data, &sequences); err != nil {
-			return err
-		}
 
-		// Add every hash to the hashes list
-		for hash := range sequences {
-			hashes[hash] = append(hashes[hash], dir.Name())
+		for _, fn := range files {
+			hash := fn.Name()
+			if storageFileRegex.Find([]byte(hash)) != nil {
+				hashes[hash] = append(hashes[hash], dir.Name())
+			}
 		}
 	}
 
